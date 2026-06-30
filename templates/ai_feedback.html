@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}AI Resume Feedback | Career Lens{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<div class="container pt-5 mt-5 pb-5" style="min-height: 80vh;">
+    <!-- Header -->
+    <div class="mb-4 pb-3 border-bottom border-secondary border-opacity-25 fade-in-up">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-robot text-info me-2"></i>
+                <span class="typewriter-text">AI Resume Feedback</span>
+            </h2>
+            <p class="text-muted mb-0">Get detailed resume reviews, ATS optimization advice, and improvement tips powered by AI.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input Panel -->
+        <div class="col-lg-5 stagger-1">
+            <div class="card glass-card border-0 rounded-4 h-100 gradient-border" style="--card-glow-color: rgba(13, 202, 240, 0.4);">
+                <div class="card-header bg-transparent pt-4 px-4 pb-2 border-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2 text-info"></i>Analysis Settings</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <ul class="nav nav-pills nav-fill gap-2 p-1 bg-dark bg-opacity-25 rounded-pill" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-pill text-white fw-bold" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-pane" type="button" role="tab"><i class="bi bi-cloud-arrow-up me-1"></i> Upload File</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill text-white fw-bold" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-pane" type="button" role="tab"><i class="bi bi-keyboard me-1"></i> Manual Entry</button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tab-content" id="inputTabsContent">
+                        <!-- File Upload Tab -->
+                        <div class="tab-pane fade show active" id="upload-pane" role="tabpanel" tabindex="0">
+                            <form id="feedbackFileForm">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small text-uppercase letter-spacing-1">Target Job Role</label>
+                                    <select class="form-select border-secondary border-opacity-50 text-body bg-transparent" id="targetRoleFile" required>
+                                        <option value="General" selected style="background:#1a1d2e; color:#e0e0e0;">General / Not Specified</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}" style="background:#1a1d2e; color:#e0e0e0;">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-muted small text-uppercase letter-spacing-1">Upload Resume</label>
+                                    <input type="file" class="form-control border-secondary border-opacity-50 text-body bg-transparent py-2" id="resumeFile" accept=".pdf,.docx" required>
+                                    <small class="text-muted mt-1 d-block"><i class="bi bi-file-earmark-pdf me-1"></i>Supports PDF and DOCX</small>
+                                </div>
+                                <button type="submit" id="btnGenFeedbackFile" class="btn btn-info w-100 py-3 rounded-3 fw-bold shadow-sm btn-ripple" style="color: #000; background-color: #0dcaf0; border-color: #0dcaf0;">
+                                    <i class="bi bi-cpu me-1"></i> Generate AI Feedback
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Manual Entry Tab -->
+                        <div class="tab-pane fade" id="manual-pane" role="tabpanel" tabindex="0">
+                            <form id="feedbackManualForm">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small text-uppercase letter-spacing-1">Target Job Role</label>
+                                    <select class="form-select border-secondary border-opacity-50 text-body bg-transparent" id="targetRoleStr" required>
+                                        <option value="General" selected style="background:#1a1d2e; color:#e0e0e0;">General / Not Specified</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}" style="background:#1a1d2e; color:#e0e0e0;">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label text-muted small text-uppercase letter-spacing-1">Paste Resume Text</label>
+                                    <textarea class="form-control border-secondary border-opacity-50 text-body bg-transparent" id="resumeTextFb" rows="10" placeholder="Paste the text contents of your resume here..." required></textarea>
+                                    <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Include work experience, projects, education, and skills</small>
+                                </div>
+                                
+                                <button type="submit" id="btnGenFeedbackManual" class="btn btn-info w-100 py-3 rounded-3 fw-bold shadow-sm btn-ripple" style="color: #000; background-color: #0dcaf0; border-color: #0dcaf0;">
+                                    <i class="bi bi-cpu me-1"></i> Generate AI Feedback
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="col-lg-7 stagger-2">
+            <div class="card glass-card border-0 rounded-4 h-100">
+                <div class="card-header bg-transparent pt-4 px-4 pb-2 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-robot me-2 text-info"></i>Analysis Report</h5>
+                    <div id="fbActions" class="d-none gap-2">
+                        <button id="btnCopyFb" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                            <i class="bi bi-clipboard me-1"></i> Copy
+                        </button>
+                        <button id="btnDownloadFb" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Download
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4 d-flex flex-column">
+                    <!-- Empty State -->
+                    <div id="fbEmptyState" class="d-flex flex-column align-items-center justify-content-center my-auto text-muted opacity-50 py-5">
+                        <div class="float-element mb-3">
+                            <i class="bi bi-robot" style="font-size: 3.5rem; color: #0dcaf0;"></i>
+                        </div>
+                        <p class="fw-semibold">Provide your resume details to generate AI feedback.</p>
+                        <small class="text-muted">AI will scan and suggest optimizations for your bullet points and ATS metrics</small>
+                    </div>
+
+                    <!-- Loader State -->
+                    <div id="fbLoaderState" class="d-none d-flex flex-column align-items-center justify-content-center my-auto py-5">
+                        <div class="spinner-border text-info mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                        <p class="fw-semibold text-info animate-pulse mb-1">AI is reviewing your resume...</p>
+                        <small class="text-muted text-center">Calculating ATS impact scores and formatting metrics</small>
+                    </div>
+
+                    <!-- Result Content -->
+                    <div id="fbResultContainer" class="d-none">
+                        <div class="p-4 rounded-4 border border-secondary border-opacity-25 bg-dark bg-opacity-40 shadow-inner" style="max-height: 60vh; overflow-y: auto;">
+                            <div id="fbContent" class="markdown-body text-body text-start">
+                                <!-- Markdown content injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const manualForm = document.getElementById('feedbackManualForm');
+    const fileForm = document.getElementById('feedbackFileForm');
+    
+    const emptyState = document.getElementById('fbEmptyState');
+    const loaderState = document.getElementById('fbLoaderState');
+    const resultContainer = document.getElementById('fbResultContainer');
+    const actionsBar = document.getElementById('fbActions');
+    const contentDiv = document.getElementById('fbContent');
+    
+    let generatedMarkdown = "";
+
+    function showLoading() {
+        emptyState.classList.add('d-none');
+        resultContainer.classList.add('d-none');
+        actionsBar.classList.add('d-none');
+        loaderState.classList.remove('d-none');
+    }
+
+    function hideLoading() {
+        loaderState.classList.add('d-none');
+    }
+
+    function renderFeedback(markdown) {
+        generatedMarkdown = markdown;
+        contentDiv.innerHTML = marked.parse(markdown);
+        
+        resultContainer.classList.remove('d-none');
+        actionsBar.classList.remove('d-none');
+        actionsBar.classList.add('d-flex');
+        
+        // Trigger subtle animation
+        resultContainer.style.animation = 'fadeInUp 0.6s ease-out';
+    }
+
+    // Manual Form Submission
+    manualForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading();
+        
+        const btn = document.getElementById('btnGenFeedbackManual');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Reviewing...';
+
+        const payload = {
+            role: document.getElementById('targetRoleStr').value,
+            resume_text: document.getElementById('resumeTextFb').value
+        };
+
+        try {
+            const response = await fetch('/api/generate-feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (response.ok && data.markdown) {
+                renderFeedback(data.markdown);
+            } else {
+                throw new Error(data.error || 'Server returned an error');
+            }
+        } catch (err) {
+            hideLoading();
+            emptyState.classList.remove('d-none');
+            alert("Error generating feedback: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
+    // File Upload Form Submission
+    fileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading();
+        
+        const btn = document.getElementById('btnGenFeedbackFile');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Reading File...';
+
+        const formData = new FormData();
+        formData.append('role', document.getElementById('targetRoleFile').value);
+        formData.append('resume', document.getElementById('resumeFile').files[0]);
+
+        try {
+            const response = await fetch('/api/generate-feedback-file', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (response.ok && data.markdown) {
+                renderFeedback(data.markdown);
+            } else {
+                throw new Error(data.error || 'Server returned an error');
+            }
+        } catch (err) {
+            hideLoading();
+            emptyState.classList.remove('d-none');
+            alert("Error analyzing file: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
+    // Actions: Copy to Clipboard
+    document.getElementById('btnCopyFb').addEventListener('click', () => {
+        if (!generatedMarkdown) return;
+        
+        navigator.clipboard.writeText(generatedMarkdown).then(() => {
+            const copyBtn = document.getElementById('btnCopyFb');
+            copyBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Copied!';
+            copyBtn.classList.remove('btn-outline-info');
+            copyBtn.classList.add('btn-success');
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy';
+                copyBtn.classList.remove('btn-success');
+                copyBtn.classList.add('btn-outline-info');
+            }, 2000);
+        }).catch(err => {
+            alert('Failed to copy text: ' + err);
+        });
+    });
+
+    // Actions: Download as File
+    document.getElementById('btnDownloadFb').addEventListener('click', () => {
+        if (!generatedMarkdown) return;
+        
+        const blob = new Blob([generatedMarkdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `resume_ai_feedback.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Career Lens | AI-Powered Career Alignment{% endblock %}
+
+{% block head %}
+<style>
+    .hero-section {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-title {
+        font-size: clamp(3rem, 5vw, 5rem);
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 650px;
+        margin: 0 auto 2.5rem;
+        line-height: 1.6;
+    }
+    
+    .cta-button {
+        padding: 1.1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    /* Premium glowing 3D layered primary button */
+    .cta-primary {
+        background: linear-gradient(135deg, #0d6efd, #00d2ff);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.4), inset 0 2px 5px rgba(255,255,255,0.3);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+    }
+    
+    .cta-primary::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        mix-blend-mode: overlay;
+        z-index: -1;
+    }
+
+    .cta-primary:hover::before {
+        opacity: 0.5;
+        animation: rotateGlow 3s linear infinite;
+    }
+
+    @keyframes rotateGlow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .cta-primary:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 15px 35px rgba(0, 210, 255, 0.6), inset 0 2px 5px rgba(255,255,255,0.4);
+        color: white;
+    }
+    
+    /* Sleek liquid fill secondary button */
+    .cta-secondary {
+        background: transparent;
+        color: #00e5ff;
+        border: 2px solid rgba(0, 229, 255, 0.8);
+        border-radius: 50px;
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .cta-secondary::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0;
+        width: 100%; height: 0%;
+        background: #00e5ff;
+        z-index: -1;
+        transition: height 0.4s cubic-bezier(0.86, 0, 0.07, 1);
+    }
+
+    .cta-secondary:hover::after {
+        height: 100%;
+    }
+
+    .cta-secondary:hover {
+        color: #060b14 !important;
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(0, 229, 255, 0.4);
+    }
+
+    /* High-tech fact boxes */
+    .tech-fact-box {
+        background: rgba(10, 15, 28, 0.6);
+        border: 1px solid rgba(0, 229, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.4s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .tech-fact-box::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 2px; height: 0%;
+        background: #00e5ff;
+        transition: height 0.4s ease;
+    }
+    .tech-fact-box:hover::before {
+        height: 100%;
+    }
+    .tech-fact-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 229, 255, 0.15);
+        border-color: rgba(0, 229, 255, 0.3);
+        background: rgba(10, 15, 28, 0.8);
+    }
+    .fact-icon {
+        font-size: 2rem;
+        color: #00e5ff;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: 2.5rem;
+        height: 100%;
+        transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .feature-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .icon-resume { background: rgba(13, 110, 253, 0.1); color: #0d6efd; border: 1px solid rgba(13, 110, 253, 0.2); }
+    .icon-target { background: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.2); }
+    .icon-insight { background: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.2); }
+
+    /* --- New Animations --- */
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(13, 110, 253, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+    }
+    
+
+    .feature-card {
+        animation: float 6s ease-in-out infinite;
+    }
+    .feature-card:nth-child(1) { animation-delay: 0s; }
+    .feature-card:nth-child(2) { animation-delay: 2s; }
+    .feature-card:nth-child(3) { animation-delay: 4s; }
+
+    /* --- Sections --- */
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 3rem;
+        position: relative;
+        display: inline-block;
+    }
+    .section-title::after {
+        content: '';
+        position: absolute;
+        width: 60%;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #0d6efd, transparent);
+        bottom: -12px;
+        left: 20%;
+    }
+
+    .team-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .team-card:hover {
+        transform: translateY(-15px) scale(1.05);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(13, 110, 253, 0.3);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(13, 110, 253, 0.05);
+    }
+    .team-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e2433 0%, #2a3142 100%);
+        border: 3px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: #0d6efd;
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    .team-card:hover .team-avatar {
+        border-color: #0d6efd;
+        color: #fff;
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        transform: rotate(360deg);
+    }
+
+    .contact-container {
+        background: rgba(0,0,0,0.2);
+        border-radius: 30px;
+        padding: 4rem 2rem;
+        border: 1px solid rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+    }
+    .contact-input {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: white !important;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+    .contact-input:focus {
+        background: rgba(255,255,255,0.05) !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 15px rgba(13, 110, 253, 0.3) !important;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="hero-section text-center pb-5 mt-4">
+    <div class="container z-1 relative">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 fade-in-up" style="animation-delay: 0.1s;">
+                <div class="d-inline-block px-4 py-2 rounded-pill border border-secondary border-opacity-25 mb-4 bg-dark bg-opacity-50 text-uppercase letter-spacing-1 small text-info fw-bold shadow-sm">
+                    <i class="bi bi-stars me-1"></i> Next-Gen AI Profiling
+                </div>
+                
+                <h1 class="hero-title text-white">
+                    Discover Your True <br>
+                    <span class="text-gradient neon-text d-inline-block mt-3">Career Alignment</span>
+                </h1>
+                
+                <p class="hero-subtitle mt-4">
+                    Upload your resume and let our advanced Machine Learning engine decode your skills. Instantly uncover the roles you're perfectly aligned for—and identify exactly what you need to learn to bridge the gap.
+                </p>
+                
+                <div class="row g-4 mt-5 justify-content-center text-start">
+                    <div class="col-lg-4 col-md-6">
+                        <a href="{{ url_for('dashboard') }}" class="text-decoration-none" style="--card-glow-color: rgba(13, 110, 253, 0.8); --card-glow-dim: rgba(13, 110, 253, 0.4);">
+                            <div class="card cyber-card h-100 p-4">
+                                <div class="cyber-scanline"></div>
+                                <i class="bi bi-file-earmark-arrow-up fs-2 text-primary mb-3 d-inline-block icon-float" style="filter: drop-shadow(0 0 10px rgba(13, 110, 253, 0.6));"></i>
+                                <h4 class="fw-bold text-white mb-2 position-relative z-1">Analyze Resume</h4>
+                                <p class="text-muted small mb-3 position-relative z-1">Upload your resume to instantly uncover aligned career paths and salary estimates.</p>
+                                <span class="text-primary small fw-bold text-uppercase letter-spacing-1 position-relative z-1">Get Started <i class="bi bi-arrow-right ms-1"></i></span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <a href="{{ url_for('role_checker_tool') }}" class="text-decoration-none" style="--card-glow-color: rgba(0, 229, 255, 0.8); --card-glow-dim: rgba(0, 229, 255, 0.4);">
+                            <div class="card cyber-card h-100 p-4">
+                                <div class="cyber-scanline"></div>
+                                <i class="bi bi-bullseye fs-2 text-info mb-3 d-inline-block icon-float" style="filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.6));"></i>
+                                <h4 class="fw-bold text-white mb-2 position-relative z-1">Role Eligibility</h4>
+                                <p class="text-muted small mb-3 position-relative z-1">Check your resume against a specific target role to identify missing skills.</p>
+                                <span class="text-info small fw-bold text-uppercase letter-spacing-1 position-relative z-1">Explore <i class="bi bi-arrow-right ms-1"></i></span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <a href="/ai-feedback" class="text-decoration-none" style="--card-glow-color: rgba(13, 202, 240, 0.8); --card-glow-dim: rgba(13, 202, 240, 0.4);">
+                            <div class="card cyber-card h-100 p-4">
+                                <div class="cyber-scanline"></div>
+                                <i class="bi bi-robot fs-2 text-info mb-3 d-inline-block icon-float" style="filter: drop-shadow(0 0 10px rgba(13, 202, 240, 0.6)); color: #0dcaf0 !important;"></i>
+                                <h4 class="fw-bold text-white mb-2 position-relative z-1">AI Resume Feedback</h4>
+                                <p class="text-muted small mb-3 position-relative z-1">Paste resume or upload a file to get expert resume reviews and feedback from AI.</p>
+                                <span class="text-info small fw-bold text-uppercase letter-spacing-1 position-relative z-1" style="color: #0dcaf0 !important;">Optimize Resume <i class="bi bi-arrow-right ms-1"></i></span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5 pt-5 g-4 justify-content-center">
+            <div class="col-lg-10 fade-in-up" style="animation-delay: 0.3s;">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold text-white"><i class="bi bi-cpu text-info me-2"></i> ML Architecture & Engine</h2>
+                    <p class="text-muted">Explore the sophisticated mathematics driving Career Lens.</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="tech-fact-box">
+                            <i class="bi bi-diagram-3 fact-icon"></i>
+                            <h5 class="fw-bold text-white mb-2">TF-IDF Vectorization</h5>
+                            <p class="text-muted small mb-0 lh-lg">Converts raw, unstructured resume text into a sophisticated mathematical matrix, allowing our algorithm to detect subtle patterns in your technical vocabulary.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tech-fact-box">
+                            <i class="bi bi-bullseye fact-icon"></i>
+                            <h5 class="fw-bold text-white mb-2">99% Prediction Accuracy</h5>
+                            <p class="text-muted small mb-0 lh-lg">Powered by a Logistic Regression classifier trained on Kaggle industry datasets with cross-validated accuracy of 99.48%, we predict your highest probability career paths with pinpoint accuracy.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tech-fact-box">
+                            <i class="bi bi-code-square fact-icon"></i>
+                            <h5 class="fw-bold text-white mb-2">Deterministic Skill Mapping</h5>
+                            <p class="text-muted small mb-0 lh-lg">Strict dictionary-based gap analysis runs alongside the ML models to precisely identify what frameworks and languages you lack for your target role.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tech-fact-box">
+                            <i class="bi bi-bar-chart-steps fact-icon"></i>
+                            <h5 class="fw-bold text-white mb-2">Experience Clustering</h5>
+                            <p class="text-muted small mb-0 lh-lg">Utilizes K-Means clustering to seamlessly classify profiles into Entry-Level, Intermediate, or Senior tiers, driving realistic salary estimations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Team Section -->
+<div class="container py-5 mt-5">
+    <div class="text-center mb-5 fade-in-up">
+        <h2 class="section-title text-white">Meet The Team</h2>
+        <p class="text-muted">The brilliant minds behind Career Lens.</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        <!-- Team Member 1 -->
+        <div class="col-sm-6 col-lg-3 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="team-card shadow-sm h-100">
+                <div class="team-avatar shadow">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-1">Sai Pranith Reddy Vaka</h5>
+                <p class="text-info small mb-0 text-uppercase letter-spacing-1">Developer</p>
+            </div>
+        </div>
+        <!-- Team Member 2 -->
+        <div class="col-sm-6 col-lg-3 fade-in-up" style="animation-delay: 0.2s;">
+            <div class="team-card shadow-sm h-100">
+                <div class="team-avatar shadow">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-1">Bobba Yagnik</h5>
+                <p class="text-info small mb-0 text-uppercase letter-spacing-1">Developer</p>
+            </div>
+        </div>
+        <!-- Team Member 3 -->
+        <div class="col-sm-6 col-lg-3 fade-in-up" style="animation-delay: 0.3s;">
+            <div class="team-card shadow-sm h-100">
+                <div class="team-avatar shadow">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-1">Raghava G Vedantam</h5>
+                <p class="text-info small mb-0 text-uppercase letter-spacing-1">Developer</p>
+            </div>
+        </div>
+        <!-- Team Member 4 -->
+        <div class="col-sm-6 col-lg-3 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="team-card shadow-sm h-100">
+                <div class="team-avatar shadow">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-1">Tata TajBabu</h5>
+                <p class="text-info small mb-0 text-uppercase letter-spacing-1">Developer</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Us Section -->
+<div class="container py-5 my-5 pb-5 fade-in-up">
+    <div class="contact-container shadow">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-5 mb-lg-0 text-center text-lg-start">
+                <h2 class="section-title text-white mb-4">Get In Touch</h2>
+                <p class="text-muted lh-lg mb-4">Have questions about our AI models? Want to integrate Career Lens into your organization? We'd love to hear from you. Drop us a line and our team will get back to you shortly.</p>
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-3">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                        <i class="bi bi-envelope-fill fs-5"></i>
+                    </div>
+                    <span class="text-white">saipranithreddyvaka@gmail.com</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-3">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                        <i class="bi bi-telephone-fill fs-5"></i>
+                    </div>
+                    <span class="text-white">+91 8498970129</span>
+                </div>
+            </div>
+            <div class="col-lg-6 offset-lg-1">
+                <form onsubmit="event.preventDefault(); alert('Message sent successfully!');">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control contact-input" placeholder="Your Name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="email" class="form-control contact-input" placeholder="Your Email" required>
+                        </div>
+                        <div class="col-12">
+                            <textarea class="form-control contact-input" rows="4" placeholder="Your Message" required></textarea>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn cta-button cta-primary w-100 shadow-lg">
+                                <i class="bi bi-send-fill me-2"></i> Send Message
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
