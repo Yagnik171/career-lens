@@ -111,3 +111,4 @@ def plot_salary_estimation(min_sal, median_sal, max_sal, predicted_sal,
     fig.savefig(path, dpi=150, bbox_inches='tight', transparent=True)
     plt.close(fig)
     return filename
+

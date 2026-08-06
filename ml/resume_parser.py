@@ -282,3 +282,4 @@ def parse_resume(file_path):
         'projects_count': extract_projects_count(text),
         'programming_languages': ', '.join(skills.get('Programming', ['None'])),
     }
+

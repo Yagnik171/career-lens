@@ -68,3 +68,4 @@ EDUCATION_FIELDS = [
 for cat in JOB_CATEGORIES:
     if cat not in SKILLS_MAP:
         SKILLS_MAP[cat] = ['Communication', 'Teamwork', 'Problem Solving', 'Analytical Skills']
+

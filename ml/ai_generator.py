@@ -139,3 +139,4 @@ Resume Text:
 
     # Fallback to local rule engine
     return _generate_fallback_feedback(resume_text, target_role)
+

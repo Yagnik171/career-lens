@@ -66,3 +66,4 @@ http://127.0.0.1:5000
 
 ---
 Enjoy using Career Lens! Feel free to open issues or contribute if you find any bugs.
+
