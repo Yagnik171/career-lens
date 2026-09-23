@@ -212,6 +212,9 @@ def upload_resume():
     plot_salary_estimation(3.0, 12.0, max_market, pred_salary, 'user_salary.png')
 
 
+    if not parsed.get('text') or len(parsed.get('text', '').strip()) < 30:
+        parsed['text'] = resume_text
+
     result = {
         'filename': file.filename,
         'parsed': parsed,
@@ -409,14 +412,16 @@ def _calculate_role_eligibility(target_role, skills, experience, education, resu
 @app.route('/api/generate-feedback', methods=['POST'])
 def api_generate_feedback():
     """API: Generate AI feedback for resume."""
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({'error': 'Invalid JSON payload'}), 400
-    resume_text = data.get('resume_text', '')
-    if not resume_text.strip():
-        return jsonify({'error': 'Resume text is required'}), 400
+    data = request.get_json(silent=True) or {}
+    resume_text = data.get('resume_text', '').strip()
+    if not resume_text:
+        resume_text = data.get('skills', '').strip()
+    if not resume_text:
+        return jsonify({'error': 'Please provide resume text or skills to generate feedback.'}), 400
+        
     target_role = data.get('role', 'General')
-    feedback = generate_resume_feedback(resume_text, target_role)
+    user_key = data.get('api_key', '').strip() or None
+    feedback = generate_resume_feedback(resume_text, target_role, user_api_key=user_key)
     return jsonify({'markdown': feedback})
 
 
@@ -430,6 +435,8 @@ def ai_feedback_tool():
 def api_generate_feedback_file():
     """API: Generate AI feedback using an uploaded resume file."""
     target_role = request.form.get('role', 'General')
+    user_key = request.form.get('api_key', '').strip() or None
+    
     if 'resume' not in request.files:
         return jsonify({'error': 'No resume file uploaded'}), 400
         
@@ -440,23 +447,26 @@ def api_generate_feedback_file():
     if not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type. Upload PDF or DOCX'}), 400
         
-    filename = secure_filename(file.filename)
+    filename = secure_filename(f"fb_{uuid.uuid4().hex}_{file.filename}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
     
     try:
         parsed = parse_resume(filepath)
-        if not parsed:
-            return jsonify({'error': 'Could not extract text from resume'}), 400
-        resume_text = parsed.get('text', '')
-        if not resume_text.strip():
-            # Fallback to skills_flat if full text extraction failed
-            resume_text = parsed.get('skills_flat', '')
+        resume_text = ""
+        if parsed:
+            resume_text = parsed.get('text', '').strip()
+            if len(resume_text) < 30:
+                resume_text = parsed.get('skills_flat', '').strip()
+        
+        if not resume_text:
+            from ml.resume_parser import extract_text
+            resume_text = extract_text(filepath).strip()
+
+        if not resume_text:
+            return jsonify({'error': 'Could not extract readable text from the uploaded document. Please ensure your PDF contains digital text, or try pasting your text manually.'}), 400
             
-        if not resume_text.strip():
-            return jsonify({'error': 'Could not extract text from the resume'}), 400
-            
-        feedback = generate_resume_feedback(resume_text, target_role)
+        feedback = generate_resume_feedback(resume_text, target_role, user_api_key=user_key)
         return jsonify({'markdown': feedback})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -466,6 +476,23 @@ def api_generate_feedback_file():
                 os.remove(filepath)
             except Exception:
                 pass
+
+
+@app.route('/api/save-gemini-key', methods=['POST'])
+def api_save_gemini_key():
+    """API: Save user's Gemini API key locally to .env and runtime environment."""
+    data = request.get_json(silent=True) or {}
+    key = data.get('api_key', '').strip()
+    if key:
+        env_path = os.path.join(os.path.dirname(__file__), '.env')
+        try:
+            with open(env_path, 'w', encoding='utf-8') as f:
+                f.write(f'GEMINI_API_KEY="{key}"\n')
+            os.environ['GEMINI_API_KEY'] = key
+            return jsonify({'success': True, 'message': 'Gemini API key saved successfully!'})
+        except Exception as e:
+            return jsonify({'error': f'Failed to write key to .env: {e}'}), 500
+    return jsonify({'error': 'No API key provided'}), 400
 
 
 @app.route('/static/charts/<path:filename>')

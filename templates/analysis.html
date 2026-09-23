@@ -349,17 +349,27 @@
 
 <!-- AI Modal -->
 <div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-    <div class="modal-content bg-dark border-secondary">
-      <div class="modal-header border-secondary border-opacity-25">
-        <h5 class="modal-title fw-bold text-gradient" id="aiModalLabel"><i class="bi bi-stars me-2"></i>AI Assistant</h5>
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+    <div class="modal-content bg-dark border-secondary shadow-lg">
+      <div class="modal-header border-secondary border-opacity-25 py-3">
+        <h5 class="modal-title fw-bold text-info" id="aiModalLabel"><i class="bi bi-robot me-2"></i>AI Resume Feedback</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body text-body" id="aiModalBody">
-        <!-- Content injected via JS -->
+      <div class="modal-body p-4" style="background: rgba(15, 23, 42, 0.95); max-height: 70vh; overflow-y: auto;">
+        <div id="aiModalBody" class="markdown-body text-light">
+          <!-- Content injected via JS -->
+        </div>
       </div>
-      <div class="modal-footer border-secondary border-opacity-25">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <div class="modal-footer border-secondary border-opacity-25 justify-content-between">
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" id="aiModalCopyBtn" onclick="copyModalFeedback()">
+            <i class="bi bi-clipboard me-1"></i> Copy
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 ms-2" id="aiModalDownloadBtn" onclick="downloadModalFeedback()">
+            <i class="bi bi-download me-1"></i> Download
+          </button>
+        </div>
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -369,22 +379,56 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
 <script>
-    // Escape resume text for JS
-    const rawResumeText = {{ result.parsed.text | tojson }};
-    
+    // Escape resume text for JS with fallback
+    const rawResumeText = {{ (result.parsed.text or result.parsed.skills_flat or "") | tojson }};
+    const candidateSkills = {{ (result.parsed.skills_flat or "") | tojson }};
+    const targetRole = {{ (result.top_roles[0].role if result.top_roles else "General") | tojson }};
+    let lastGeneratedFeedback = "";
+
+    function safeRenderMarkdown(md) {
+        if (window.marked && typeof marked.parse === 'function') {
+            try {
+                return marked.parse(md);
+            } catch(e) {
+                console.warn("marked.parse error, using fallback:", e);
+            }
+        }
+        return md
+            .replace(/^### (.*$)/gim, '<h4 class="fw-bold text-info mt-3 mb-2">$1</h4>')
+            .replace(/^#### (.*$)/gim, '<h5 class="fw-bold text-light mt-3 mb-2">$1</h5>')
+            .replace(/^> (.*$)/gim, '<blockquote class="p-2 my-2 rounded bg-dark border-start border-info border-3 text-light small">$1</blockquote>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white">$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em class="text-info">$1</em>')
+            .replace(/`([^`]+)`/gim, '<code class="bg-secondary text-warning px-1 rounded">$1</code>')
+            .replace(/^- (.*$)/gim, '<li class="ms-3 text-light mb-1">$1</li>')
+            .replace(/\n\n/gim, '<div class="my-2"></div>')
+            .replace(/\n/gim, '<br>');
+    }
+
     async function generateAIFeedback() {
-        const modal = new bootstrap.Modal(document.getElementById('aiModal'));
-        document.getElementById('aiModalLabel').innerHTML = '<i class="bi bi-robot me-2"></i>AI Resume Feedback';
-        document.getElementById('aiModalBody').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Analyzing resume bullet points...</p></div>';
+        const modalEl = document.getElementById('aiModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        document.getElementById('aiModalLabel').innerHTML = '<i class="bi bi-robot me-2"></i>AI Resume Feedback for ' + targetRole;
+        document.getElementById('aiModalBody').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-info mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <p class="mt-2 text-info fw-semibold">Analyzing resume metrics, skill gaps, and ATS bullet points...</p>
+                <small class="text-muted">Evaluating keywords for ${targetRole}</small>
+            </div>
+        `;
         modal.show();
+
+        const textToSend = rawResumeText && rawResumeText.trim().length > 20 ? rawResumeText : (candidateSkills || "Technical Resume");
+        const apiKey = localStorage.getItem('gemini_api_key') || "";
 
         try {
             const res = await fetch('/api/generate-feedback', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    resume_text: rawResumeText,
-                    role: '{{ result.top_roles[0].role if result.top_roles else "General" }}'
+                    resume_text: textToSend,
+                    role: targetRole,
+                    api_key: apiKey
                 })
             });
             
@@ -397,10 +441,37 @@
                 throw new Error('No feedback received from the server');
             }
             
-            document.getElementById('aiModalBody').innerHTML = marked.parse(data.markdown);
+            lastGeneratedFeedback = data.markdown;
+            document.getElementById('aiModalBody').innerHTML = safeRenderMarkdown(data.markdown);
         } catch(e) {
             document.getElementById('aiModalBody').innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><strong>Error:</strong> ${e.message}</div>`;
         }
+    }
+
+    function copyModalFeedback() {
+        if (!lastGeneratedFeedback) return;
+        navigator.clipboard.writeText(lastGeneratedFeedback).then(() => {
+            const btn = document.getElementById('aiModalCopyBtn');
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Copied!';
+            btn.classList.replace('btn-outline-info', 'btn-success');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy';
+                btn.classList.replace('btn-success', 'btn-outline-info');
+            }, 2000);
+        });
+    }
+
+    function downloadModalFeedback() {
+        if (!lastGeneratedFeedback) return;
+        const blob = new Blob([lastGeneratedFeedback], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `careerlens_${targetRole.toLowerCase().replace(/[^a-z0-9]/g, '_')}_feedback.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
 

@@ -15,4 +15,4 @@ parsed_resume.json
 ai_resume_dataset.csv
 dev_scripts/
 *.docx
-
+.Rproj.user
