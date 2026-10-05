@@ -503,5 +503,5 @@ def serve_chart(filename):
 if __name__ == '__main__':
     print("\nStarting Career Lens...")
     print("   Visit: http://127.0.0.1:5000\n")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)
 
